@@ -200,13 +200,8 @@ app.resources = resources;
 /*
  * maps a single path
  *
- * @param {String} verb
- * @param {String} path
- * @param {Function|Array} action
  * @api public
  */
 
-app.resourceMatch = function(verb, path, action) {
-  drawRoute.apply(this, [verb, path, action]);
-};
+app.resourceMatch = drawRoute;
 
