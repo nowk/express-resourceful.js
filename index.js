@@ -12,14 +12,14 @@ var app = express.application;
  */
 
 var defaultActions = [
-  ['index',    'get',     '/'],
-  ['new',      'get',     '/new'],
-  ['show',     'get',     '/:id'],
-  ['create',   'post',    '/'],
-  ['edit',     'get',     '/:id/edit'],
-  ['update',   'put',     '/:id'],
-  ['patch',    'patch',   '/:id'],
-  ['destroy',  'delete',  '/:id']
+  ['index',    'get',    '/'],
+  ['new',      'get',    '/new'],
+  ['show',     'get',    '/:id'],
+  ['create',   'post',   '/'],
+  ['edit',     'get',    '/:id/edit'],
+  ['update',   'put',    '/:id'],
+  ['patch',    'patch',  '/:id'],
+  ['destroy',  'del',    '/:id']
 ];
 
 
