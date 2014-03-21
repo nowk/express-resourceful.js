@@ -85,15 +85,13 @@ describe('app.resources', function() {
   });
 
   describe('nested resources', function() {
-    before(function() {
+    it('creates nested routes', function(done) {
       app.resources('/tasks', controller, function(tasks) {
         tasks.resources('/assignments', controller, function(assignments) {
           assignments.resources('/comments', controller);
         });
       });
-    });
 
-    it('creates nested routes', function(done) {
       co(function *() {
         yield assert_request('get',    '/tasks/123/assignments',           200);
         yield assert_request('get',    '/tasks/123/assignments/new',       200);
@@ -118,16 +116,16 @@ describe('app.resources', function() {
     });
 
     it('uses the singularized path as the prefix for the id param name', function(done) {
-      co(function *() {
-        yield assert_request('get', '/tasks/123/assignments', {task_id: '123'});
-        yield assert_request('get', '/tasks/123/assignments/456/comments', 
-          {task_id: '123', assignment_id: '456'});
+      app.resources('/tasks', controller, function(tasks) {
+        tasks.resources('/assignments', controller, function(assignments) {
+          var comments = assignments.resources('/comments', controller);
 
-        yield assert_request('get', '/tasks/123/assignments/456/comments/789', 
-          {task_id: '123', assignment_id: '456', id: '789'});
-
-        done();
-      })();
+          assert.equal(assignments.path, '/tasks/:task_id/assignments');
+          assert.equal(comments.path, '/tasks/:task_id/assignments/:assignment_id/comments');
+          assert_request('get', '/tasks/123/assignments/456/comments/789',
+            {task_id: '123', assignment_id: '456', id: '789'}).then(function() { done(); });
+        });
+      });
     });
   });
 });
