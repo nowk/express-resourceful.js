@@ -65,6 +65,25 @@ For middleware support pass an array to the action. The actual response should a
       ...
     }]);
 
+---
+
+Nested resources
+
+    app.resources('/tasks', controller, function(tasks) {
+      tasks.resources('/assignments', controller, function(assignments) {
+        assignments.resources('/comments', controller);
+      });
+    });
+
+    # /tasks
+    # /tasks/:task_id/assignments
+    # /tasks/:task_id/assignments/:assignment_id
+    # /tasks/:task_id/assignments/:assignment_id/comments
+    # /tasks/:task_id/assignments/:assignment_id/comments/:id
+
+
+
+
 # Notes
 
 Inspired by [express-resource](https://github.com/visionmedia/express-resource) & [Rails routing](http://api.rubyonrails.org/classes/ActionDispatch/Routing.html)

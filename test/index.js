@@ -18,7 +18,11 @@ var authMiddleware = function(req, res, next) {
 };
 
 var actionfn = function(req, res, next) {
-  res.send({});
+  var params = {};
+  for(var key in req.params) {
+    params[key] = req.params[key];
+  }
+  res.send(params);
 };
 
 var controller = {
@@ -78,6 +82,53 @@ describe('app.resources', function() {
       yield assert_request('post',  '/comments',      401);
       done();
     })();
+  });
+
+  describe('nested resources', function() {
+    before(function() {
+      app.resources('/tasks', controller, function(tasks) {
+        tasks.resources('/assignments', controller, function(assignments) {
+          assignments.resources('/comments', controller);
+        });
+      });
+    });
+
+    it('creates nested routes', function(done) {
+      co(function *() {
+        yield assert_request('get',    '/tasks/123/assignments',           200);
+        yield assert_request('get',    '/tasks/123/assignments/new',       200);
+        yield assert_request('post',   '/tasks/123/assignments',           200);
+        yield assert_request('get',    '/tasks/123/assignments/456',       200);
+        yield assert_request('get',    '/tasks/123/assignments/456/edit',  200);
+        yield assert_request('put',    '/tasks/123/assignments/456',       200);
+        yield assert_request('patch',  '/tasks/123/assignments/456',       200);
+        yield assert_request('del',    '/tasks/123/assignments/456',       200);
+
+        yield assert_request('get',    '/tasks/123/assignments/456/comments',           200);
+        yield assert_request('get',    '/tasks/123/assignments/456/comments/new',       200);
+        yield assert_request('post',   '/tasks/123/assignments/456/comments',           200);
+        yield assert_request('get',    '/tasks/123/assignments/456/comments/789',       200);
+        yield assert_request('get',    '/tasks/123/assignments/456/comments/789/edit',  200);
+        yield assert_request('put',    '/tasks/123/assignments/456/comments/789',       200);
+        yield assert_request('patch',  '/tasks/123/assignments/456/comments/789',       200);
+        yield assert_request('del',    '/tasks/123/assignments/456/comments/789',       200);
+
+        done();
+      })();
+    });
+
+    it('uses the singularized path as the prefix for the id param name', function(done) {
+      co(function *() {
+        yield assert_request('get', '/tasks/123/assignments', {task_id: '123'});
+        yield assert_request('get', '/tasks/123/assignments/456/comments', 
+          {task_id: '123', assignment_id: '456'});
+
+        yield assert_request('get', '/tasks/123/assignments/456/comments/789', 
+          {task_id: '123', assignment_id: '456', id: '789'});
+
+        done();
+      })();
+    });
   });
 });
 

@@ -1,5 +1,6 @@
 /* jshint laxcomma: true, node: true */
 
+var inflect = require('i')();
 var express = require('express');
 var app = express.application;
 
@@ -47,39 +48,68 @@ Resourceful.verbs = {
 /*
  * Resourceful
  *
+ * @param {Resourceful|null} resource
  * @param {String} ns
- * @param {Object} resource
+ * @param {Object} actions
  * @param {Server} app
+ * @api private
  */
 
-function Resourceful(ns, resource, app) {
+function Resourceful(resource, ns, actions, app) {
+  this.parentResource = resource;
+  this.path = (this.parentResource) ? nestedPath(resource, ns) : ns;
+  this.actions = actions;
   this.app = app;
-  this.mapDefaultActions(ns, resource);
+
+  this.mapDefaultActions();
 }
 
 
 /*
  * maps available CRUD actions
  *
- * @param {String} ns
- * @param {Object} actions
  * @api private
  */
 
-Resourceful.prototype.mapDefaultActions = function(ns, actions) {
+Resourceful.prototype.mapDefaultActions = function() {
   var self = this;
 
   defaultActions.forEach(function(conf, i) {
     var name = conf[0];
     var verb = conf[1];
-    var path = normalizePath(ns, conf[2]);
-    var action = actions[name];
+    var path = generatePath(self.path, conf[2]);
+    var action = self.actions[name];
 
     if (action) {
       drawRoute.apply(self.app, [verb, path, action]);
     }
   });
 };
+
+
+/*
+ * creates nested resources
+ *
+ * @api public
+ */
+
+Resourceful.prototype.resources = resources;
+
+
+/*
+ * generate nested paths
+ *
+ * @param {Resourceful} resource
+ * @param {String} ns
+ * @return {String}
+ * @api private
+ */
+
+function nestedPath(resource, ns) {
+  var idname = inflect.singularize(resource.path.split('/').pop());
+
+  return normalizePath([resource.path, ':'+idname+'_id', ns].join('/'));
+}
 
 
 /*
@@ -99,37 +129,72 @@ function drawRoute(verb, path, action) {
 
 
 /*
- * noramlize path for double / and remove the ending /
+ * generates path
  *
  * @param {String} ns
+ * @param {String} path
+ * @return string
+ * @api private
+ */
+
+function generatePath(ns, path) {
+  if ('/' === ns && '/' === path) {
+    return path;
+  }
+
+  return normalizePath([ns, path].join('/'));
+}
+
+
+/*
+ * noramlize path for double / and remove the ending /
+ *
  * @param {String} path
  * @return {String}
  * @api private
  */
 
-function normalizePath(ns, path) {
-  if ('/' === ns && '/' === path) {
-    return path;
-  }
-
-  return [ns, path]
-    .join('/')
+function normalizePath(path) {
+  return path
     .replace(/\/{2,}/g, '/') // remove double /
     .replace(/\/$/g, '');    // remove ending /
 }
 
 
 /*
- * maps an object
+ * creates resources
  *
  * @param {String} ns
- * @param {Object} resource
+ * @param {Object} actions
+ * @param {Function} nestedResource
+ * @return {Resourceful}
+ * @api private
+ */
+
+function resources() {
+  var ns = arguments[0];
+  var actions = arguments[1];
+  var nestedResource = arguments[2];
+  var parentResource = (this instanceof Resourceful) ? this : null;
+  var app = (this instanceof Resourceful) ? this.app : this;
+
+  var resource = new Resourceful(parentResource, ns, actions, app);
+
+  if ('function' === typeof nestedResource && nestedResource.length === 1) {
+    nestedResource(resource);
+  }
+
+  return resource;
+}
+
+
+/*
+ * create resources
+ *
  * @api public
  */
 
-app.resources = function(ns, resource) {
-  new Resourceful(ns, resource, this);
-};
+app.resources = resources;
 
 
 /*
