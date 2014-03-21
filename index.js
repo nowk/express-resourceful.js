@@ -60,8 +60,6 @@ function Resourceful(resource, ns, actions, app) {
   this.path = (this.parentResource) ? nestedPath(resource, ns) : ns;
   this.actions = actions;
   this.app = app;
-
-  this.mapDefaultActions();
 }
 
 
@@ -130,6 +128,7 @@ function resources() {
   var app = (this instanceof Resourceful) ? this.app : this;
 
   var resource = new Resourceful(parentResource, ns, actions, app);
+  resource.mapDefaultActions();
 
   if ('function' === typeof nestedResource && nestedResource.length === 1) {
     nestedResource(resource);
