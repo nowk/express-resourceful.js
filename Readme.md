@@ -82,6 +82,24 @@ Nested resources
     # /tasks/:task_id/assignments/:assignment_id/comments/:id
 
 
+---
+
+Namespaced resources
+
+    app.resources('/api', function(api) {
+      api.resources('/posts', controller);
+    });
+
+    # GET    '/api/posts'
+    # GET    '/api/posts/new'
+    # POST   '/api/posts'
+    # GET    '/api/posts/:id'
+    # GET    '/api/posts/:id/edit'
+    # PUT    '/api/posts/:id'
+    # PATCH  '/api/posts/:id'
+    # DELETE '/api/posts/:id'
+
+
 
 
 # Notes

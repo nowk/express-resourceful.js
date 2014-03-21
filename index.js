@@ -57,8 +57,8 @@ Resourceful.verbs = {
 
 function Resourceful(resource, ns, actions, app) {
   this.parentResource = resource;
-  this.path = (this.parentResource) ? nestedPath(resource, ns) : ns;
   this.actions = actions;
+  this.path = generatePath(this.parentResource, ns);
   this.app = app;
 }
 
@@ -75,7 +75,7 @@ Resourceful.prototype.mapDefaultActions = function() {
   defaultActions.forEach(function(conf, i) {
     var name = conf[0];
     var verb = conf[1];
-    var path = generatePath(self.path, conf[2]);
+    var path = generatePath(null, self.path, conf[2]);
     var action = self.actions[name];
 
     if (action) {
@@ -122,13 +122,16 @@ function drawRoute(verb, path, action) {
 
 function resources() {
   var ns = arguments[0];
-  var actions = arguments[1];
-  var nestedResource = arguments[2];
+  var actions = notEmpty(arguments[1]) ? arguments[1] : null;
+  var nestedResource = actions ? arguments[2] : arguments[1];
   var parentResource = (this instanceof Resourceful) ? this : null;
   var app = (this instanceof Resourceful) ? this.app : this;
 
   var resource = new Resourceful(parentResource, ns, actions, app);
-  resource.mapDefaultActions();
+
+  if (actions) {
+    resource.mapDefaultActions();
+  }
 
   if ('function' === typeof nestedResource && nestedResource.length === 1) {
     nestedResource(resource);
@@ -139,36 +142,50 @@ function resources() {
 
 
 /*
- * generate nested paths
+ * check emptyness of object
  *
- * @param {Resourceful} resource
- * @param {String} ns
- * @return {String}
+ * @param {Object} obj
+ * @return {Bool}
  * @api private
  */
 
-function nestedPath(resource, ns) {
-  var idname = inflect.singularize(resource.path.split('/').pop());
+function notEmpty(obj) {
+  if (!obj || 'object' !== typeof obj) {
+    return false;
+  }
 
-  return normalizePath([resource.path, ':'+idname+'_id', ns].join('/'));
+  return Object.keys(obj).length > 0;
 }
 
 
 /*
  * generates path
  *
+ * @param {Resourceful} resource
  * @param {String} ns
  * @param {String} path
  * @return string
  * @api private
  */
 
-function generatePath(ns, path) {
-  if ('/' === ns && '/' === path) {
+function generatePath(resource, ns, path) {
+  var pathSchema = [ns, path];
+
+  if (pathSchema === ['/', '/']) {
     return path;
   }
 
-  return normalizePath([ns, path].join('/'));
+  // nested paths
+  if (resource) {
+    pathSchema = [resource.path, ns];
+
+    if (notEmpty(resource.actions)) {
+      var idname = inflect.singularize(resource.path.split('/').pop());
+      pathSchema.splice(1, 0, ':'+idname+'_id');
+    }
+  }
+
+  return normalizePath(pathSchema.join('/'));
 }
 
 
@@ -182,8 +199,8 @@ function generatePath(ns, path) {
 
 function normalizePath(path) {
   return path
-    .replace(/\/{2,}/g, '/') // remove double /
-    .replace(/\/$/g, '');    // remove ending /
+    .replace(/\/{2,}/g, '/')        // remove double /
+    .replace(/([^\/])(\/)$/, '$1'); // remove ending / only if it's not alone
 }
 
 

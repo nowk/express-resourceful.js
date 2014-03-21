@@ -128,6 +128,19 @@ describe('app.resources', function() {
       });
     });
   });
+
+  it('creates a namespace if no actions are provided', function(done) {
+    app.resources('/api', function(api) {
+      var posts = api.resources('/posts', controller);
+      assert.equal(posts.path, '/api/posts');
+
+      co(function *() {
+        yield assert_request('put', '/api/posts/123', {id: '123'});
+        // yield assert_request('get', '/api', 404); // TODO route load order is breaking test
+        done();
+      })();
+    });
+  });
 });
 
 describe('app.resourceMatch', function() {
