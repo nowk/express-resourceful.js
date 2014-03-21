@@ -97,22 +97,6 @@ Resourceful.prototype.resources = resources;
 
 
 /*
- * generate nested paths
- *
- * @param {Resourceful} resource
- * @param {String} ns
- * @return {String}
- * @api private
- */
-
-function nestedPath(resource, ns) {
-  var idname = inflect.singularize(resource.path.split('/').pop());
-
-  return normalizePath([resource.path, ':'+idname+'_id', ns].join('/'));
-}
-
-
-/*
  * apply routes
  *
  * @param {String} verb
@@ -125,6 +109,49 @@ function drawRoute(verb, path, action) {
   verb = verb.toLowerCase();
 
   this[verb](path, action);
+}
+
+
+/*
+ * creates resources
+ *
+ * @param {String} ns
+ * @param {Object} actions
+ * @param {Function} nestedResource
+ * @return {Resourceful}
+ * @api private
+ */
+
+function resources() {
+  var ns = arguments[0];
+  var actions = arguments[1];
+  var nestedResource = arguments[2];
+  var parentResource = (this instanceof Resourceful) ? this : null;
+  var app = (this instanceof Resourceful) ? this.app : this;
+
+  var resource = new Resourceful(parentResource, ns, actions, app);
+
+  if ('function' === typeof nestedResource && nestedResource.length === 1) {
+    nestedResource(resource);
+  }
+
+  return resource;
+}
+
+
+/*
+ * generate nested paths
+ *
+ * @param {Resourceful} resource
+ * @param {String} ns
+ * @return {String}
+ * @api private
+ */
+
+function nestedPath(resource, ns) {
+  var idname = inflect.singularize(resource.path.split('/').pop());
+
+  return normalizePath([resource.path, ':'+idname+'_id', ns].join('/'));
 }
 
 
@@ -158,33 +185,6 @@ function normalizePath(path) {
   return path
     .replace(/\/{2,}/g, '/') // remove double /
     .replace(/\/$/g, '');    // remove ending /
-}
-
-
-/*
- * creates resources
- *
- * @param {String} ns
- * @param {Object} actions
- * @param {Function} nestedResource
- * @return {Resourceful}
- * @api private
- */
-
-function resources() {
-  var ns = arguments[0];
-  var actions = arguments[1];
-  var nestedResource = arguments[2];
-  var parentResource = (this instanceof Resourceful) ? this : null;
-  var app = (this instanceof Resourceful) ? this.app : this;
-
-  var resource = new Resourceful(parentResource, ns, actions, app);
-
-  if ('function' === typeof nestedResource && nestedResource.length === 1) {
-    nestedResource(resource);
-  }
-
-  return resource;
 }
 
 
