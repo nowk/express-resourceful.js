@@ -1,6 +1,6 @@
 {
   "name": "express-resourceful.js",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Route utility for Express.js",
   "main": "index.js",
   "scripts": {
