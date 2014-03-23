@@ -24,6 +24,23 @@ var defaultActions = [
 
 
 /*
+ * singular action routes
+ *
+ * [name, verb, path]
+ */
+
+var singularActions = [
+  ['new',      'get',    '/new'],
+  ['show',     'get',    '/'],
+  ['create',   'post',   '/'],
+  ['edit',     'get',    '/edit'],
+  ['update',   'put',    '/'],
+  ['patch',    'patch',  '/'],
+  ['destroy',  'del',    '/']
+];
+
+
+/*
  * expose Resoureful
  */
 
@@ -71,8 +88,9 @@ function Resourceful(resource, ns, actions, app) {
 
 Resourceful.prototype.mapDefaultActions = function() {
   var self = this;
+  var routes = this.singular ? singularActions : defaultActions;
 
-  defaultActions.forEach(function(conf, i) {
+  routes.forEach(function(conf, i) {
     var name = conf[0];
     var verb = conf[1];
     var path = generatePath(null, self.path, conf[2]);
@@ -116,11 +134,12 @@ function drawRoute(verb, path, action) {
  * @param {String} ns
  * @param {Object} actions
  * @param {Function} nestedResource
+ * @param {Boolean} singular
  * @return {Resourceful}
  * @api private
  */
 
-function resources(ns, actions, nestedResource) {
+function resources(ns, actions, nestedResource, singular) {
   if (false === notEmpty(actions)) {
     nestedResource = actions;
     actions = null;
@@ -131,6 +150,10 @@ function resources(ns, actions, nestedResource) {
 
   var resource = new Resourceful(parentResource, ns, actions, app);
 
+  if (singular) {
+    resource.singular = true;
+  }
+
   if (actions) {
     resource.mapDefaultActions();
   }
@@ -140,6 +163,21 @@ function resources(ns, actions, nestedResource) {
   }
 
   return resource;
+}
+
+
+/*
+ * create singular resources
+ *
+ * @param {String} ns
+ * @param {Object} actions
+ * @param {Function} nestedResource
+ * @return {Resourceful}
+ * @api private
+ */
+
+function resource(ns, actions, nestedResrouce) {
+  return resources.call(this, ns, actions, nestedResrouce, true);
 }
 
 
@@ -181,7 +219,7 @@ function generatePath(resource, ns, path) {
   if (resource) {
     pathSchema = [resource.path, ns];
 
-    if (notEmpty(resource.actions)) {
+    if (notEmpty(resource.actions) && !resource.singular) {
       var idname = inflect.singularize(resource.path.split('/').pop());
       pathSchema.splice(1, 0, ':'+idname+'_id');
     }
@@ -213,6 +251,15 @@ function normalizePath(path) {
  */
 
 app.resources = resources;
+
+
+/*
+ * create singular resources
+ *
+ * @api public
+ */
+
+app.resource = resource;
 
 
 /*

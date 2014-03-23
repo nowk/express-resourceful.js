@@ -9,21 +9,21 @@ const express = require('express');
 const Resourceful = require('..');
 const app = express();
 
+const controller = {
+  index: fn,
+  new: fn,
+  create: fn,
+  show: fn,
+  edit: fn,
+  update: fn,
+  patch: fn,
+  destroy: fn
+};
+
 
 describe('#resources', function() {
 
   'use strict';
-
-  let controller = {
-    index: fn,
-    new: fn,
-    create: fn,
-    show: fn,
-    edit: fn,
-    update: fn,
-    patch: fn,
-    destroy: fn
-  };
 
   it('maps the default actions', function(done) {
     app.resources('/posts', controller);
@@ -135,6 +135,47 @@ describe('#resources', function() {
   //     done();
   //   })();
   // });
+});
+
+describe('app.resource', function() {
+  it('creates singular resources', function(done) {
+    var account = app.resource('/account', controller);
+
+    assert.equal(account.path, '/account');
+    co(function *() {
+      yield assert_request('get',    '/account/',      200);
+      yield assert_request('get',    '/account/new',   200);
+      yield assert_request('post',   '/account/',      200);
+      yield assert_request('get',    '/account/edit',  200);
+      yield assert_request('put',    '/account',       200);
+      yield assert_request('patch',  '/account',       200);
+      yield assert_request('del',    '/account',       200);
+
+      yield assert_request('get',    '/account/123',   404);
+      done();
+    })();
+  });
+
+
+  it('can have nested resources', function(done) {
+    var account = app.resource('/account', controller);
+    account.resources('/projects', controller);
+
+    assert.equal(account.path, '/account');
+    co(function *() {
+      yield assert_request('get',    '/account/projects',          200);
+      yield assert_request('get',    '/account/projects/new',       200);
+      yield assert_request('post',   '/account/projects/',          200);
+      yield assert_request('get',    '/account/projects/123',       {id: '123'});
+      yield assert_request('get',    '/account/projects/123/edit',  200);
+      yield assert_request('put',    '/account/projects/123',       200);
+      yield assert_request('patch',  '/account/projects/123',       200);
+      yield assert_request('del',    '/account/projects/123',       200);
+
+      yield assert_request('get',    '/account',   200);
+      done();
+    })();
+  });
 });
 
 describe('app.resourceMatch', function() {
