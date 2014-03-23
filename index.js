@@ -120,10 +120,12 @@ function drawRoute(verb, path, action) {
  * @api private
  */
 
-function resources() {
-  var ns = arguments[0];
-  var actions = notEmpty(arguments[1]) ? arguments[1] : null;
-  var nestedResource = actions ? arguments[2] : arguments[1];
+function resources(ns, actions, nestedResource) {
+  if (false === notEmpty(actions)) {
+    nestedResource = actions;
+    actions = null;
+  }
+
   var parentResource = (this instanceof Resourceful) ? this : null;
   var app = (this instanceof Resourceful) ? this.app : this;
 
