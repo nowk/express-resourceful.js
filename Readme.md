@@ -43,6 +43,28 @@ You may omit actions if you don't need them, those will not be mapped.
 
 ---
 
+`#resource` creates singular resources
+
+    app.resource('/account', {
+      new:      function(req, res, next) { ... },
+      create:   function(req, res, next) { ... },
+      show:     function(req, res, next) { ... },
+      edit:     function(req, res, next) { ... },
+      update:   function(req, res, next) { ... },
+      patch:    function(req, res, next) { ... },
+      destroy:  function(req, res, next) { ... },
+    }r);
+
+    # GET    '/account/new'
+    # POST   '/account'
+    # GET    '/account'
+    # GET    '/account/edit'
+    # PUT    '/account'
+    # PATCH  '/account'
+    # DELETE '/account'
+
+---
+
 `#resourceMatch` maps a single route.
 
     app.resourceMatch(Resourceful.verbs.POST, '/login', function(req, res, next) {
@@ -80,7 +102,6 @@ Nested resources
     # /tasks/:task_id/assignments/:assignment_id
     # /tasks/:task_id/assignments/:assignment_id/comments
     # /tasks/:task_id/assignments/:assignment_id/comments/:id
-
 
 ---
 
