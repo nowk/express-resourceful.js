@@ -12,14 +12,14 @@ var app = express.application;
  */
 
 var defaultActions = [
-  ['index',    'get',    '/'],
-  ['new',      'get',    '/new'],
-  ['show',     'get',    '/:id'],
-  ['create',   'post',   '/'],
-  ['edit',     'get',    '/:id/edit'],
-  ['update',   'put',    '/:id'],
-  ['patch',    'patch',  '/:id'],
-  ['destroy',  'del',    '/:id']
+  ['index',    'get',     '/'],
+  ['new',      'get',     '/new'],
+  ['show',     'get',     '/:id'],
+  ['create',   'post',    '/'],
+  ['edit',     'get',     '/:id/edit'],
+  ['update',   'put',     '/:id'],
+  ['patch',    'patch',   '/:id'],
+  ['destroy',  'delete',  '/:id']
 ];
 
 
@@ -30,13 +30,13 @@ var defaultActions = [
  */
 
 var singularActions = [
-  ['new',      'get',    '/new'],
-  ['show',     'get',    '/'],
-  ['create',   'post',   '/'],
-  ['edit',     'get',    '/edit'],
-  ['update',   'put',    '/'],
-  ['patch',    'patch',  '/'],
-  ['destroy',  'del',    '/']
+  ['new',      'get',     '/new'],
+  ['show',     'get',     '/'],
+  ['create',   'post',    '/'],
+  ['edit',     'get',     '/edit'],
+  ['update',   'put',     '/'],
+  ['patch',    'patch',   '/'],
+  ['destroy',  'delete',  '/']
 ];
 
 
@@ -90,6 +90,8 @@ Resourceful.prototype.mapDefaultActions = function() {
   var self = this;
   var routes = this.singular ? singularActions : defaultActions;
 
+  var router = express.Router();
+
   routes.forEach(function(conf, i) {
     var name = conf[0];
     var verb = conf[1];
@@ -97,9 +99,13 @@ Resourceful.prototype.mapDefaultActions = function() {
     var action = self.actions[name];
 
     if (action) {
-      drawRoute.apply(self.app, [verb, path, action]);
+      router[verb](path, action);
     }
   });
+
+  if (router.stack.length > 0) {
+    drawRoute.call(self.app, router);
+  }
 };
 
 
@@ -115,16 +121,12 @@ Resourceful.prototype.resources = resources;
 /*
  * apply routes
  *
- * @param {String} verb
- * @param {String} path
- * @param {Function|Array} action
+ * @param {Router} router
  * @api private
  */
 
-function drawRoute(verb, path, action) {
-  verb = verb.toLowerCase();
-
-  this[verb](path, action);
+function drawRoute(router) {
+  this.use(router);
 }
 
 
@@ -265,8 +267,18 @@ app.resource = resource;
 /*
  * maps a single path
  *
+ * @param {String} verb
+ * @param {String} path
+ * @param {Function} action
  * @api public
  */
 
-app.resourceMatch = drawRoute;
+app.resourceMatch = function(verb, path, action) {
+  verb = verb.toLowerCase();
+
+  var router = express.Router();
+  router[verb](path, action);
+
+  drawRoute.call(this, router);
+};
 
