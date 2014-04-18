@@ -92,6 +92,18 @@ Resourceful.prototype.mapDefaultActions = function() {
 
   var router = express.Router();
 
+  // map `all` before anything else
+  var all = self.actions.all;
+  if (all) {
+    if (all instanceof Array) {
+      for(var i=0, len=all.length; i<len; i++) {
+        router.use(self.path, all[i]);
+      }
+    } else {
+      router.use(self.path, all);
+    }
+  }
+
   routes.forEach(function(conf, i) {
     var name = conf[0];
     var verb = conf[1];
