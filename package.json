@@ -4,7 +4,7 @@
   "description": "Route utility for Express.js",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test --harmony"
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,8 @@
     "chai": "~1.9.1",
     "supertest": "~0.9.2",
     "co": "~3.0.5",
-    "q": "~2.0.0"
+    "q": "~2.0.0",
+    "mocha": "^1.19.0"
   },
   "dependencies": {
     "express": "~4.x.x",
