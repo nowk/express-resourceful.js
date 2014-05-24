@@ -1,23 +1,22 @@
 /* jshint node: true, esnext: true */
 
-const t = require('./test_helper');
-const co = require('co');
-const Q = require('q');
-const assert = require('chai').assert;
-const express = require('express');
+var t = require('./test_helper');
+var Q = require('q');
+var assert = require('chai').assert;
+var express = require('express');
 
-const controller = t.controller;
-const fn = t.fn;
-const nextMiddleware = t.nextMiddleware;
-const auth = t.auth;
+var controller = t.controller;
+var fn = t.fn;
+var nextMiddleware = t.nextMiddleware;
+var auth = t.auth;
 
-const Resourceful = require('..');
-const app = express();
+var Resourceful = require('..');
+var app = express();
 
-const assertRequest = t.assertRequest(app);
+var assertRequest = t.assertRequest(app);
 
 describe("middlewares", function() {
-  'use strict';
+  this._timeout = 9999;
 
   it("can be passed in as part of the route function", function(done) {
     app.resources('/comments', {
@@ -32,15 +31,18 @@ describe("middlewares", function() {
       destroy: [auth, fn]
     });
 
-    co(function *() {
-      yield assertRequest('get',   '/comments',      401);
-      yield assertRequest('get',   '/comments/new',  200);
-      yield assertRequest('post',  '/comments',      401);
-      yield assertRequest('get',   '/user/edit',     401);
-      yield assertRequest('get',   '/user/new',      200);
-      yield assertRequest('del',   '/user',          401);
+    Q.all([
+      assertRequest('get',   '/comments',      401),
+      assertRequest('get',   '/comments/new',  200),
+      assertRequest('post',  '/comments',      401),
+      assertRequest('get',   '/user/edit',     401),
+      assertRequest('get',   '/user/new',      200),
+      assertRequest('del',   '/user',          401)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 });
 

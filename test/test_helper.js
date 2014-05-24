@@ -1,8 +1,7 @@
-/* jshint node: true, esnext: true */
+/* jshint node: true */
 
-const request = require('supertest');
-const Q = require('q');
-
+var request = require('supertest');
+var Q = require('q');
 
 /*
  * standard controller
@@ -19,26 +18,27 @@ exports.controller = {
   destroy: fn
 };
 
-
 /*
  * assert request
+ *
+ * @param {Application} app
+ * @return {Promise}
  */
 
 exports.assertRequest = function(app) {
   return function(method, path, status) {
     var defer = Q.defer();
-
     request(app)[method](path)
       .expect(status)
       .end(function(err, res) {
-        if (err) throw err;
+        if (err) {
+          defer.reject(err);
+        }
         defer.resolve(res);
       });
-
     return defer.promise;
   };
 };
-
 
 /*
  * expose fn
@@ -46,24 +46,17 @@ exports.assertRequest = function(app) {
 
 exports.fn = fn;
 
-
 /*
  * middleware acts as action sends params back as body
  */
 
 function fn(req, res, next) {
-
-  'use strict';
-
-  let params = {};
-
-  for(let key in req.params) {
+  var params = {};
+  for(var key in req.params) {
     params[key] = req.params[key];
   }
-
   res.send(params);
 }
-
 
 /*
  * just next
@@ -72,7 +65,6 @@ function fn(req, res, next) {
 exports.nextMiddleware = function(req, res, next) {
   next();
 };
-
 
 /*
  * mimic failed auth middleware

@@ -1,27 +1,24 @@
 /* jshint node: true, esnext: true */
 
-const t = require('./test_helper');
-const co = require('co');
-const Q = require('q');
-const assert = require('chai').assert;
-const express = require('express');
+var t = require('./test_helper');
+var Q = require('q');
+var assert = require('chai').assert;
+var express = require('express');
 
-const controller = t.controller;
-const fn = t.fn;
-const nextMiddleware = t.nextMiddleware;
-const auth = t.auth;
+var controller = t.controller;
+var fn = t.fn;
+var nextMiddleware = t.nextMiddleware;
+var auth = t.auth;
 
-const Resourceful = require('..');
-const app = express();
+var Resourceful = require('..');
+var app = express();
 
-const assertRequest = t.assertRequest(app);
+var assertRequest = t.assertRequest(app);
 
 
 describe("nested routes", function() {
-  "use strict";
-
-  let assignmentsResources;
-  let commentsResources;
+  var assignmentsResources;
+  var commentsResources;
 
   before(function() {
     app.resources('/tasks', controller, function(tasks) {
@@ -32,41 +29,49 @@ describe("nested routes", function() {
   });
 
   it("can be nested to resources", function(done) {
-    co(function *() {
-      yield assertRequest('get',    '/tasks/123/assignments',           200);
-      yield assertRequest('get',    '/tasks/123/assignments/new',       200);
-      yield assertRequest('post',   '/tasks/123/assignments',           200);
-      yield assertRequest('get',    '/tasks/123/assignments/456',       200);
-      yield assertRequest('get',    '/tasks/123/assignments/456/edit',  200);
-      yield assertRequest('put',    '/tasks/123/assignments/456',       200);
-      yield assertRequest('patch',  '/tasks/123/assignments/456',       200);
-      yield assertRequest('del',    '/tasks/123/assignments/456',       200);
+    Q.all([
+      assertRequest('get',    '/tasks/123/assignments',           200),
+      assertRequest('get',    '/tasks/123/assignments/new',       200),
+      assertRequest('post',   '/tasks/123/assignments',           200),
+      assertRequest('get',    '/tasks/123/assignments/456',       200),
+      assertRequest('get',    '/tasks/123/assignments/456/edit',  200),
+      assertRequest('put',    '/tasks/123/assignments/456',       200),
+      assertRequest('patch',  '/tasks/123/assignments/456',       200),
+      assertRequest('del',    '/tasks/123/assignments/456',       200)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 
   it("can be more than one level deep", function(done) {
-    co(function *() {
-      yield assertRequest('get',    '/tasks/123/assignments/456/comments',           200);
-      yield assertRequest('get',    '/tasks/123/assignments/456/comments/new',       200);
-      yield assertRequest('post',   '/tasks/123/assignments/456/comments',           200);
-      yield assertRequest('get',    '/tasks/123/assignments/456/comments/789',       200);
-      yield assertRequest('get',    '/tasks/123/assignments/456/comments/789/edit',  200);
-      yield assertRequest('put',    '/tasks/123/assignments/456/comments/789',       200);
-      yield assertRequest('patch',  '/tasks/123/assignments/456/comments/789',       200);
-      yield assertRequest('del',    '/tasks/123/assignments/456/comments/789',       200);
+    Q.all([
+      assertRequest('get',    '/tasks/123/assignments/456/comments',           200),
+      assertRequest('get',    '/tasks/123/assignments/456/comments/new',       200),
+      assertRequest('post',   '/tasks/123/assignments/456/comments',           200),
+      assertRequest('get',    '/tasks/123/assignments/456/comments/789',       200),
+      assertRequest('get',    '/tasks/123/assignments/456/comments/789/edit',  200),
+      assertRequest('put',    '/tasks/123/assignments/456/comments/789',       200),
+      assertRequest('patch',  '/tasks/123/assignments/456/comments/789',       200),
+      assertRequest('del',    '/tasks/123/assignments/456/comments/789',       200)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 
   it('uses the singularized namespace as the prefix for the id param name', function(done) {
     assert.equal(assignmentsResources.path, '/tasks/:task_id/assignments');
     assert.equal(commentsResources.path, '/tasks/:task_id/assignments/:assignment_id/comments');
     assertRequest('get', '/tasks/123/assignments/456/comments/789', {
-      task_id: '123', 
-      assignment_id: '456', 
+      task_id: '123',
+      assignment_id: '456',
       id: '789'})
-    .then(done());
+    .then(function() {
+      done();
+    });
   });
 
   it("can be nested to a singular resource", function(done) {
@@ -78,37 +83,40 @@ describe("nested routes", function() {
     assert.equal(projectResources.path, '/account/projects');
     assert.equal(taskResources.path, '/account/projects/:project_id/tasks');
 
-    co(function *() {
-      yield assertRequest('get',    '/account/projects',           200);
-      yield assertRequest('get',    '/account/projects/new',       200);
-      yield assertRequest('post',   '/account/projects/',          200);
-      yield assertRequest('get',    '/account/projects/123',       {id: '123'});
-      yield assertRequest('get',    '/account/projects/123/edit',  200);
-      yield assertRequest('put',    '/account/projects/123',       200);
-      yield assertRequest('patch',  '/account/projects/123',       200);
-      yield assertRequest('del',    '/account/projects/123',       200);
+    Q.all([
+      assertRequest('get',    '/account/projects',           200),
+      assertRequest('get',    '/account/projects/new',       200),
+      assertRequest('post',   '/account/projects/',          200),
+      assertRequest('get',    '/account/projects/123',       {id: '123'}),
+      assertRequest('get',    '/account/projects/123/edit',  200),
+      assertRequest('put',    '/account/projects/123',       200),
+      assertRequest('patch',  '/account/projects/123',       200),
+      assertRequest('del',    '/account/projects/123',       200),
 
-      yield assertRequest('get',    '/account',       200);
-      yield assertRequest('get',    '/account/new',   200);
-      yield assertRequest('post',   '/account',       200);
-      yield assertRequest('get',    '/account/edit',  200);
-      yield assertRequest('put',    '/account',       200);
-      yield assertRequest('patch',  '/account',       200);
-      yield assertRequest('del',    '/account',       200);
+      assertRequest('get',    '/account',       200),
+      assertRequest('get',    '/account/new',   200),
+      assertRequest('post',   '/account',       200),
+      assertRequest('get',    '/account/edit',  200),
+      assertRequest('put',    '/account',       200),
+      assertRequest('patch',  '/account',       200),
+      assertRequest('del',    '/account',       200),
 
-      yield assertRequest('get',    '/account/projects/123/tasks',           200);
-      yield assertRequest('get',    '/account/projects/123/tasks/new',       200);
-      yield assertRequest('post',   '/account/projects/123/tasks/',          200);
-      yield assertRequest('get',    '/account/projects/123/tasks/456',       {
+      assertRequest('get',    '/account/projects/123/tasks',           200),
+      assertRequest('get',    '/account/projects/123/tasks/new',       200),
+      assertRequest('post',   '/account/projects/123/tasks/',          200),
+      assertRequest('get',    '/account/projects/123/tasks/456',       {
         project_id: '123',
         id: '456'
-      });
-      yield assertRequest('get',    '/account/projects/123/tasks/456/edit',  200);
-      yield assertRequest('put',    '/account/projects/123/tasks/456',       200);
-      yield assertRequest('patch',  '/account/projects/123/tasks/456',       200);
-      yield assertRequest('del',    '/account/projects/123/tasks/456',       200);
+      }),
+      assertRequest('get',    '/account/projects/123/tasks/456/edit',  200),
+      assertRequest('put',    '/account/projects/123/tasks/456',       200),
+      assertRequest('patch',  '/account/projects/123/tasks/456',       200),
+      assertRequest('del',    '/account/projects/123/tasks/456',       200)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 });
 

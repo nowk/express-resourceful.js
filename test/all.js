@@ -1,24 +1,22 @@
-/* jshint node: true, esnext: true */
+/* jshint node: true */
 
-const t = require('./test_helper');
-const co = require('co');
-const Q = require('q');
-const assert = require('chai').assert;
-const express = require('express');
+var t = require('./test_helper');
+var Q = require('q');
+var assert = require('chai').assert;
+var express = require('express');
 
-const controller = t.controller;
-const fn = t.fn;
-const nextMiddleware = t.nextMiddleware;
-const auth = t.auth;
+var controller = t.controller;
+var fn = t.fn;
+var nextMiddleware = t.nextMiddleware;
+var auth = t.auth;
 
-const Resourceful = require('..');
-const app = express();
+var Resourceful = require('..');
+var app = express();
 
-const assertRequest = t.assertRequest(app);
-
+var assertRequest = t.assertRequest(app);
 
 describe("all", function() {
-  "use strict";
+  this._timeout = 9999;
 
   it("runs `all` actions before all other actions", function(done) {
     app.resources("/posts", {
@@ -37,15 +35,18 @@ describe("all", function() {
       accounts.resources("/projects", {new: fn});
     });
 
-    co(function *() {
-      yield assertRequest("get",   "/posts/new",               401);
-      yield assertRequest("post",  "/posts",                   401);
-      yield assertRequest("get",   "/posts/123/comments/new",  401);
-      yield assertRequest("get",   "/accounts/new",            401);
-      yield assertRequest("post",  "/accounts",                401);
-      yield assertRequest("get",   "/accounts/projects/new",   401);
+    Q.all([
+      assertRequest("get",   "/posts/new",               401),
+      assertRequest("post",  "/posts",                   401),
+      assertRequest("get",   "/posts/123/comments/new",  401),
+      assertRequest("get",   "/accounts/new",            401),
+      assertRequest("post",  "/accounts",                401),
+      assertRequest("get",   "/accounts/projects/new",   401)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 });
 

@@ -1,20 +1,19 @@
 /* jshint node: true, esnext: true */
 
-const t = require('./test_helper');
-const co = require('co');
-const Q = require('q');
-const assert = require('chai').assert;
-const express = require('express');
+var t = require('./test_helper');
+var Q = require('q');
+var assert = require('chai').assert;
+var express = require('express');
 
-const controller = t.controller;
-const fn = t.fn;
-const nextMiddleware = t.nextMiddleware;
-const auth = t.auth;
+var controller = t.controller;
+var fn = t.fn;
+var nextMiddleware = t.nextMiddleware;
+var auth = t.auth;
 
-const Resourceful = require('..');
-const app = express();
+var Resourceful = require('..');
+var app = express();
 
-const assertRequest = t.assertRequest(app);
+var assertRequest = t.assertRequest(app);
 
 describe("on root", function() {
   before(function() {
@@ -22,26 +21,29 @@ describe("on root", function() {
   });
 
   it('maps default actions on root', function(done) {
-    co(function *() {
-      yield assertRequest('get',    '/',          200);
-      yield assertRequest('get',    '/new',       200);
-      yield assertRequest('get',    '/123',       200);
-      yield assertRequest('post',   '/',          200);
-      yield assertRequest('get',    '/123/edit',  200);
-      yield assertRequest('put',    '/123',       200);
-      yield assertRequest('patch',  '/123',       200);
-      yield assertRequest('del',    '/123',       200);
+    Q.all([
+      assertRequest('get',    '/',          200),
+      assertRequest('get',    '/new',       200),
+      assertRequest('get',    '/123',       200),
+      assertRequest('post',   '/',          200),
+      assertRequest('get',    '/123/edit',  200),
+      assertRequest('put',    '/123',       200),
+      assertRequest('patch',  '/123',       200),
+      assertRequest('del',    '/123',       200)
+    ])
+    .then(function(results) {
       done();
-    })();
+    })
+    .catch(done);
   });
 
   it("should be the last resource defined to avoid name collision", function(done) {
     app.resources("/posts", controller);
-
-    co(function *() {
-      yield assertRequest("get", "/posts", {id: "posts"});
-      done();
-    })();
+    assertRequest("get", "/posts", {id: "posts"})
+      .then(function(results) {
+        done();
+      })
+      .catch(done);
   });
 });
 
